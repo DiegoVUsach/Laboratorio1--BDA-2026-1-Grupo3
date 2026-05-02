@@ -27,7 +27,7 @@ public class PersonajeRepository {
             entity.setIdRol(rs.getInt("id_rol"));
             entity.setNombrePersonaje(rs.getString("nombre_personaje"));
             entity.setNivel(rs.getInt("nivel"));
-            entity.setItemLevel(rs.getString("item_level"));
+            entity.setItemLevel(rs.getInt("item_level"));
             entity.setPuntosDkpActuales(rs.getInt("puntos_dkp_actuales"));
             return entity;
         }
@@ -58,4 +58,38 @@ public class PersonajeRepository {
         String sql = "DELETE FROM personaje WHERE id_personaje = ?";
         return jdbcTemplate.update(sql, id);
     }
+
+
+        // Verificar si un personaje es el líder de su clan
+    public boolean isGuildMaster(Integer idPersonaje) {
+        String sql = "SELECT COUNT(*) FROM clanes WHERE id_lider = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, idPersonaje);
+        return count != null && count > 0;
+    }
+
+    // Verificar que un personaje pertenece al usuario autenticado
+    public boolean isUsuarioPersonaje(Integer idPersonaje, String username) {
+        String sql = "SELECT COUNT(*) FROM personaje p " +
+                    "JOIN usuarios u ON p.id_usuario = u.id_usuario " +
+                    "WHERE p.id_personaje = ? AND u.nombre_usuario = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, idPersonaje, username);
+        return count != null && count > 0;
+    }
+
+    // Buscar todos los personajes de un clan con un rol especifico (Raider)
+    public List<Personaje> findByClanAndRol(Integer idClan, String nombreRol) {
+        String sql = "SELECT p.* FROM personaje p " +
+                    "JOIN roles r ON p.id_rol = r.id_rol " +
+                    "WHERE p.id_clan = ? AND r.nombre_rol = ?";
+        return jdbcTemplate.query(sql, rowMapper, idClan, nombreRol);
+    }
+
+    // Transferir liderazgo (TRIGGER 2)
+    public int newLider(Integer idClan, Integer idNuevoLider) {
+        // Al actualizar el id_lider en la tabla CLANES, el Trigger 2 de auditoría se activará automáticamente
+        String sql = "UPDATE clanes SET id_lider = ? WHERE id_clan = ?";
+        return jdbcTemplate.update(sql, idNuevoLider, idClan);
+    }
+
+
 }

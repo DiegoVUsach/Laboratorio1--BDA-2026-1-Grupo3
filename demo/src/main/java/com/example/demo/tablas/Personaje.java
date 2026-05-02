@@ -7,7 +7,7 @@ public class Personaje {
     private Integer idUsuario;
     private Integer idClan;
     private Integer idClase;
-    private Integer idRol;
+    private Integer idRol; 
     private String nombrePersonaje;
     private Integer nivel;
     private Integer itemLevel;

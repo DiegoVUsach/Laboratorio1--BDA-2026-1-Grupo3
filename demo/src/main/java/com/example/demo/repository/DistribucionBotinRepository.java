@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+/* 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -55,3 +56,4 @@ public class DistribucionBotinRepository {
         return jdbcTemplate.update(sql, id);
     }
 }
+*/

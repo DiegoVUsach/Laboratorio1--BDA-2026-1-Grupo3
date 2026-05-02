@@ -9,6 +9,7 @@ import com.example.demo.tablas.Raid;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class RaidRepository {
@@ -52,5 +53,17 @@ public class RaidRepository {
     public int deleteById(Integer id) {
         String sql = "DELETE FROM raid WHERE id_raid = ?";
         return jdbcTemplate.update(sql, id);
+    }
+
+    public void createMassiveEvent(Integer idClan, Integer idRaid, String fecha) {
+    // Procedimiento Almacenado Crea el evento e inserta a todos los 'Raider' automáticamente
+    String sql = "CALL generar_raid_e_invitar_raiders(?, ?, ?)";
+    jdbcTemplate.update(sql, idClan, idRaid, fecha);
+    }
+
+    // Ver calendario y cupos  (Logica no realizada, ejemplo de IA solamente) (Evento asumo)
+    public List<Map<String, Object>> getWeeklySchedule() {
+    String sql = "SELECT * FROM vista_calendario_raids"; 
+    return jdbcTemplate.queryForList(sql);
     }
 }

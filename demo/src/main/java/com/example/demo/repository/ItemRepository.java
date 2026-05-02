@@ -52,4 +52,10 @@ public class ItemRepository {
         String sql = "DELETE FROM item WHERE id_item = ?";
         return jdbcTemplate.update(sql, id);
     }
+
+    public void distributeLootProcedure(Integer idPersonaje, Integer idItem) {
+        // Se usa CALL para procedimientos almacenados en PostgreSQL
+        String sql = "CALL distribuir_botin(?, ?)";
+        jdbcTemplate.update(sql, idPersonaje, idItem);
+    }
 }

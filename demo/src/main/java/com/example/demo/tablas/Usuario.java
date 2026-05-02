@@ -5,4 +5,5 @@ import lombok.Data;
 public class Usuario {
     private Integer idUsuario;
     private String nombreUsuario;
+    private String password; 
 }

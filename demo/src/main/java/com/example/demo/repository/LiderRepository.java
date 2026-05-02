@@ -22,7 +22,6 @@ public class LiderRepository {
             Lider entity = new Lider();
             entity.setIdLider(rs.getInt("id_lider"));
             entity.setIdPersonaje(rs.getInt("id_personaje"));
-            entity.setNombreLider(rs.getString("nombre_lider"));
             return entity;
         }
     };
@@ -39,13 +38,13 @@ public class LiderRepository {
     }
 
     public int save(Lider entity) {
-        String sql = "INSERT INTO lider (id_personaje, nombre_lider) VALUES (?, ?)";
-        return jdbcTemplate.update(sql, entity.getIdPersonaje(), entity.getNombreLider());
+        String sql = "INSERT INTO lider (id_personaje) VALUES (?)";
+        return jdbcTemplate.update(sql, entity.getIdPersonaje());
     }
 
     public int update(Lider entity) {
-        String sql = "UPDATE lider SET id_personaje = ?, nombre_lider = ? WHERE id_lider = ?";
-        return jdbcTemplate.update(sql, entity.getIdPersonaje(), entity.getNombreLider(), entity.getIdLider());
+        String sql = "UPDATE lider SET id_personaje = ? WHERE id_lider = ?";
+        return jdbcTemplate.update(sql, entity.getIdPersonaje(), entity.getIdLider());
     }
 
     public int deleteById(Integer id) {

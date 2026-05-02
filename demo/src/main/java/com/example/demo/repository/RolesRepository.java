@@ -37,6 +37,12 @@ public class RolesRepository {
         return list.isEmpty() ? null : list.get(0);
     }
 
+    public Roles findByName(String nombre) {
+        String sql = "SELECT * FROM roles WHERE nombre_rol = ?";
+        List<Roles> list = jdbcTemplate.query(sql, rowMapper, nombre);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
     public int save(Roles entity) {
         String sql = "INSERT INTO roles (nombre_rol) VALUES (?)";
         return jdbcTemplate.update(sql, entity.getNombreRol());

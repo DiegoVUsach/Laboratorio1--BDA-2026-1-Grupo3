@@ -22,6 +22,7 @@ public class UsuarioRepository {
             Usuario entity = new Usuario();
             entity.setIdUsuario(rs.getInt("id_usuario"));
             entity.setNombreUsuario(rs.getString("nombre_usuario"));
+            entity.setPassword(rs.getString("password"));
             return entity;
         }
     };
@@ -37,18 +38,25 @@ public class UsuarioRepository {
         return list.isEmpty() ? null : list.get(0);
     }
 
+    public Usuario findByUsername(String username) {
+        String sql = "SELECT * FROM usuario WHERE nombre_usuario = ?";
+        List<Usuario> list = jdbcTemplate.query(sql, rowMapper, username);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
     public int save(Usuario entity) {
-        String sql = "INSERT INTO usuario (nombre_usuario) VALUES (?)";
-        return jdbcTemplate.update(sql, entity.getNombreUsuario());
+        String sql = "INSERT INTO usuario (nombre_usuario, password) VALUES (?, ?)";
+        return jdbcTemplate.update(sql, entity.getNombreUsuario(), entity.getPassword());
     }
 
     public int update(Usuario entity) {
-        String sql = "UPDATE usuario SET nombre_usuario = ? WHERE id_usuario = ?";
-        return jdbcTemplate.update(sql, entity.getNombreUsuario(), entity.getIdUsuario());
+        String sql = "UPDATE usuario SET nombre_usuario = ?, password = ? WHERE id_usuario = ?";
+        return jdbcTemplate.update(sql, entity.getNombreUsuario(), entity.getPassword(), entity.getIdUsuario());
     }
 
     public int deleteById(Integer id) {
         String sql = "DELETE FROM usuario WHERE id_usuario = ?";
         return jdbcTemplate.update(sql, id);
     }
+
 }

@@ -1,0 +1,38 @@
+services:
+
+  # Contenedor de PostgreSQL
+  db:
+    image: postgres:16
+    container_name: lab1-postgres
+    environment:
+      POSTGRES_DB: laboratorio1
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5433:5432"   # Puerto 5433 en tu maquina para no chocar con tu PostgreSQL local
+    volumes:
+      # Estos scripts se ejecutan AUTOMATICAMENTE la primera vez que el contenedor arranca
+      - ./script_db.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./load_data.sql:/docker-entrypoint-initdb.d/02-data.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Contenedor de la aplicacion Spring Boot
+  app:
+    build: .
+    container_name: lab1-app
+    ports:
+      - "8080:8080"
+    environment:
+      # Estas variables SOBREESCRIBEN lo que dice application.properties
+      # "db" es el nombre del servicio de arriba, Docker lo resuelve como hostname
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/laboratorio1
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123456
+      APP_JWT_SECRET: esta_es_una_clave_muy_secreta_y_larga_para_cumplir_con_los_256_bits
+    depends_on:
+      db:
+        condition: service_healthy   # Espera a que PostgreSQL este listo antes de arrancar

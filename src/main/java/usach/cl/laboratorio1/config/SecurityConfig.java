@@ -37,6 +37,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+                .cors(cors -> {})
                 // Desactivar CSRF porque usamos JWT (no cookies)
                 .csrf(csrf -> csrf.disable())
                 // No usar sesiones: cada peticion se autentica con su token

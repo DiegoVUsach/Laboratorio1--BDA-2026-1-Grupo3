@@ -1,0 +1,25 @@
+:root {
+  color-scheme: dark;
+  --gamer-bg: #0b1120;
+  --gamer-card: #0f172a;
+  --gamer-border: rgba(148, 163, 184, 0.2);
+  --gamer-text: #e2e8f0;
+  --gamer-muted: #94a3b8;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--gamer-bg);
+  color: var(--gamer-text);
+  line-height: 1.6;
+  font-family: 'Exo 2', system-ui, -apple-system, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}

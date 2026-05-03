@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123456
     ports:
-      - "5433:5432"   # Puerto 5433 en tu maquina para no chocar con tu PostgreSQL local
+      - "5555:5432"   # Puerto 5555 en tu maquina para no chocar con tu PostgreSQL local
     volumes:
       # Estos scripts se ejecutan AUTOMATICAMENTE la primera vez que el contenedor arranca
       - ./script_db.sql:/docker-entrypoint-initdb.d/01-schema.sql
@@ -18,7 +18,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   # Contenedor de la aplicacion Spring Boot
   app:
@@ -36,3 +36,4 @@ services:
     depends_on:
       db:
         condition: service_healthy   # Espera a que PostgreSQL este listo antes de arrancar
+    restart: on-failure

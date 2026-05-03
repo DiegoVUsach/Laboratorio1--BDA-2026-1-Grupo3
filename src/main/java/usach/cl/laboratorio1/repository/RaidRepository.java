@@ -27,9 +27,13 @@ public class RaidRepository {
         return r;
     };
 
+    public List<Raid> findAll(int page, int size) {
+        String sql = "SELECT * FROM raids ORDER BY fecha_raid ASC LIMIT ? OFFSET ?";
+        return jdbcTemplate.query(sql, raidMapper, size, page * size);
+    }
+
     public List<Raid> findAll() {
-        return jdbcTemplate.query(
-                "SELECT * FROM raids ORDER BY fecha_raid ASC", raidMapper);
+        return jdbcTemplate.query("SELECT * FROM raids ORDER BY fecha_raid ASC", raidMapper);
     }
 
     public Raid findById(Integer id) {

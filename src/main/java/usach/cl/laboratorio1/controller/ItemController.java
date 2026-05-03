@@ -1,10 +1,12 @@
 package usach.cl.laboratorio1.controller;
 
 import usach.cl.laboratorio1.repository.ItemRepository;
+import usach.cl.laboratorio1.repository.PersonajeRepository;
 import usach.cl.laboratorio1.tablas.HistorialBotin;
 import usach.cl.laboratorio1.tablas.Item;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,20 +20,23 @@ public class ItemController {
     @Autowired
     private ItemRepository itemRepository;
 
-    // GET /api/items - Listar todos los items
+    @Autowired
+    private PersonajeRepository personajeRepository;
+
+    // FIX BUG 7: paginacion
     @GetMapping
-    public List<Item> findAll() {
-        return itemRepository.findAll();
+    public List<Item> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return itemRepository.findAll(page, size);
     }
 
-    // GET /api/items/1 - Obtener item por ID
     @GetMapping("/{id}")
     public ResponseEntity<Item> findById(@PathVariable Integer id) {
         Item item = itemRepository.findById(id);
         return item != null ? ResponseEntity.ok(item) : ResponseEntity.notFound().build();
     }
 
-    // POST /api/items - Crear un item nuevo
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Item item) {
         try {
@@ -42,7 +47,6 @@ public class ItemController {
         }
     }
 
-    // PUT /api/items/1 - Actualizar un item
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Integer id, @RequestBody Item item) {
         item.setIdItem(id);
@@ -50,20 +54,24 @@ public class ItemController {
         return ResponseEntity.ok("Item actualizado");
     }
 
-    // DELETE /api/items/1 - Eliminar un item
+    // FIX BUG 3: Solo ADMIN puede eliminar items
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Integer id) {
+    public ResponseEntity<?> delete(@PathVariable Integer id, Authentication auth) {
+        if (!auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            return ResponseEntity.status(403).body("Solo administradores pueden eliminar items.");
+        }
         itemRepository.deleteById(id);
         return ResponseEntity.ok("Item eliminado");
     }
 
-    // POST /api/items/repartir
-    // Requerimiento 3: Stored Procedure 1 - distribuir botin.
-    // Ejecuta sp_repartir_botin que en una transaccion atomica:
-    // verifica DKP, descuenta puntos, registra en historial.
+    // FIX BUG 4: Verificar que el personaje pertenece al usuario
     @PostMapping("/repartir")
-    public ResponseEntity<?> repartir(@RequestBody BotinRequest request) {
+    public ResponseEntity<?> repartir(@RequestBody BotinRequest request, Authentication auth) {
         try {
+            if (!personajeRepository.perteneceAUsuario(request.idPersonaje, auth.getName())) {
+                return ResponseEntity.status(403).body("El personaje no pertenece a tu cuenta.");
+            }
             itemRepository.repartirBotin(request.idPersonaje, request.idItem, request.idRaid);
             return ResponseEntity.ok("Botin asignado y DKP descontados.");
         } catch (Exception e) {
@@ -71,22 +79,18 @@ public class ItemController {
         }
     }
 
-    // GET /api/items/historial/1
-    // Requerimiento 10: historial de botin de un jugador especifico.
+    // Req 10: Historial de botin
     @GetMapping("/historial/{idPersonaje}")
     public List<HistorialBotin> historialBotin(@PathVariable Integer idPersonaje) {
         return itemRepository.obtenerHistorialPorPersonaje(idPersonaje);
     }
 
-    // GET /api/items/ranking
-    // Requerimiento 7: ranking del clan desde la vista materializada.
+    // Req 7: Ranking
     @GetMapping("/ranking")
     public List<Map<String, Object>> ranking() {
         return itemRepository.obtenerRanking();
     }
 
-    // POST /api/items/ranking/refrescar
-    // Requerimiento 7: refrescar la vista materializada manualmente.
     @PostMapping("/ranking/refrescar")
     public ResponseEntity<?> refrescarRanking() {
         itemRepository.refrescarRanking();

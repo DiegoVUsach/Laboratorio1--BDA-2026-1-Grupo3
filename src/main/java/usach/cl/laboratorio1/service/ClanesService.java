@@ -29,6 +29,9 @@ public class ClanesService {
     public void save(Clanes clan) {
         clanesRepository.save(clan);
     }
+    public void update(Clanes clan) {
+        clanesRepository.update(clan);
+    }
 
     // Transferencia de liderazgo (Req 2 + Req 6).
     // Este metodo tiene MUCHA validacion porque es una operacion sensible:

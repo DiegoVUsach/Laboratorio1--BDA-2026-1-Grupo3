@@ -25,6 +25,11 @@ public class ItemRepository {
         return item;
     };
 
+    public List<Item> findAll(int page, int size) {
+        String sql = "SELECT * FROM item ORDER BY id_item LIMIT ? OFFSET ?";
+        return jdbcTemplate.query(sql, itemMapper, size, page * size);
+    }
+
     public List<Item> findAll() {
         return jdbcTemplate.query("SELECT * FROM item", itemMapper);
     }

@@ -28,6 +28,15 @@ public class PersonajeRepository {
         return p;
     };
 
+    // Paginacion: LIMIT controla cuantos resultados, OFFSET salta los anteriores.
+    // Ejemplo: page=0, size=10 → LIMIT 10 OFFSET 0 (primeros 10)
+    //          page=1, size=10 → LIMIT 10 OFFSET 10 (siguientes 10)
+    public List<Personaje> findAll(int page, int size) {
+        String sql = "SELECT * FROM personaje ORDER BY id_personaje LIMIT ? OFFSET ?";
+        return jdbcTemplate.query(sql, rowMapper, size, page * size);
+    }
+
+    // Mantener version sin paginacion para uso interno
     public List<Personaje> findAll() {
         return jdbcTemplate.query("SELECT * FROM personaje", rowMapper);
     }

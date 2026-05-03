@@ -1,8 +1,10 @@
 package usach.cl.laboratorio1.controller;
 
 import usach.cl.laboratorio1.repository.PersonajeRepository;
+import usach.cl.laboratorio1.repository.UsuarioRepository;
 import usach.cl.laboratorio1.service.PersonajeService;
 import usach.cl.laboratorio1.tablas.Personaje;
+import usach.cl.laboratorio1.tablas.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,13 +25,20 @@ public class PersonajeController {
     @Autowired
     private PersonajeService personajeService;
 
-    // GET /api/personajes - Listar todos los personajes
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    // GET /api/personajes?page=0&size=10
+    // FIX BUG 7: paginacion agregada
     @GetMapping
-    public List<Personaje> findAll() {
-        return personajeRepository.findAll();
+    public List<Personaje> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return personajeRepository.findAll(page, size);
     }
 
     // GET /api/personajes/3 - Obtener un personaje por su ID
+
     @GetMapping("/{id}")
     public ResponseEntity<Personaje> findById(@PathVariable Integer id) {
         Personaje p = personajeRepository.findById(id);
@@ -39,15 +48,23 @@ public class PersonajeController {
     // GET /api/personajes/mis-personajes
     // Devuelve solo los personajes del usuario autenticado (Req 2).
     // auth.getName() extrae el username del token JWT.
+    // Personajes del usuario autenticado
     @GetMapping("/mis-personajes")
     public List<Personaje> misPersonajes(Authentication auth) {
         return personajeRepository.findByUsuario(auth.getName());
     }
 
-    // POST /api/personajes - Crear un personaje nuevo
+    // FIX BUG 1: el idUsuario se obtiene del token JWT, no del body.
+    // Un jugador solo puede crear personajes para su propia cuenta.
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody Personaje personaje) {
+    public ResponseEntity<?> create(@RequestBody Personaje personaje, Authentication auth) {
         try {
+            Usuario owner = usuarioRepository.findByUsername(auth.getName());
+            if (owner == null) {
+                return ResponseEntity.status(401).body("Usuario no encontrado.");
+            }
+            // Forzar que el personaje pertenezca al usuario del token
+            personaje.setIdUsuario(owner.getIdUsuario());
             personajeRepository.save(personaje);
             return ResponseEntity.ok("Personaje creado exitosamente");
         } catch (Exception e) {
@@ -57,6 +74,7 @@ public class PersonajeController {
 
     // PUT /api/personajes/3 - Actualizar un personaje
     // Solo el dueno del personaje puede modificarlo (validacion JWT).
+    // Solo el dueño del personaje puede modificarlo
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Integer id,
                                     @RequestBody Personaje personaje,
@@ -75,6 +93,7 @@ public class PersonajeController {
 
     // DELETE /api/personajes/3 - Eliminar un personaje
     // Solo el dueno puede eliminarlo.
+    // Solo el dueño puede eliminarlo
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id, Authentication auth) {
         if (!personajeRepository.perteneceAUsuario(id, auth.getName())) {
@@ -88,6 +107,7 @@ public class PersonajeController {
     // Solo el Guild Master puede cambiar roles (Req 2).
     // Recibe: idEjecutor (quien lo hace), idObjetivo (a quien),
     // nuevoRol ("Raider", "Member", etc.)
+    // Asignar rol (solo Guild Master)
     @PutMapping("/asignar-rol")
     public ResponseEntity<?> asignarRol(@RequestBody RolRequest request,
                                         Authentication auth) {

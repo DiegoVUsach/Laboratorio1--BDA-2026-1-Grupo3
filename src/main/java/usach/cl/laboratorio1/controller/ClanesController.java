@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// FIX BUG 9: CRUD completo de clanes
 @RestController
 @RequestMapping("/api/clanes")
 @CrossOrigin("*")
@@ -17,29 +18,37 @@ public class ClanesController {
     @Autowired
     private ClanesService clanesService;
 
-    // GET /api/clanes - Listar todos los clanes
     @GetMapping
     public List<Clanes> findAll() {
         return clanesService.findAll();
     }
 
-    // GET /api/clanes/1 - Obtener un clan por ID
     @GetMapping("/{id}")
     public ResponseEntity<Clanes> findById(@PathVariable Integer id) {
         Clanes clan = clanesService.findById(id);
         return clan != null ? ResponseEntity.ok(clan) : ResponseEntity.notFound().build();
     }
 
-    // POST /api/clanes - Crear un clan nuevo
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Clanes clan) {
         clanesService.save(clan);
         return ResponseEntity.ok("Clan creado exitosamente");
     }
 
-    // PUT /api/clanes/1/transfer-leadership
-    // Transferir liderazgo del clan (Req 2 + Req 6).
-    // Este endpoint dispara el Trigger de auditoria en PostgreSQL.
+    // FIX BUG 9: Update de clan (solo datos basicos, no liderazgo)
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable Integer id,
+                                    @RequestBody Clanes clan) {
+        Clanes existing = clanesService.findById(id);
+        if (existing == null) {
+            return ResponseEntity.notFound().build();
+        }
+        existing.setNombreClan(clan.getNombreClan());
+        clanesService.update(existing);
+        return ResponseEntity.ok("Clan actualizado");
+    }
+
+    // Transferir liderazgo (dispara Trigger 2)
     @PutMapping("/{id}/transfer-leadership")
     public ResponseEntity<?> transferLeadership(
             @PathVariable Integer id,
@@ -54,7 +63,6 @@ public class ClanesController {
         }
     }
 
-    // Mini-DTO para la transferencia de liderazgo
     static class TransferRequest {
         public Integer idCurrentLeader;
         public Integer idNewLeader;

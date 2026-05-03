@@ -26,7 +26,6 @@ CREATE TABLE personaje (
                            nombre_personaje VARCHAR(100) NOT NULL UNIQUE,
                            clase VARCHAR(50) NOT NULL,
                            rol_clan VARCHAR(50) DEFAULT 'Member',
-                           nivel INTEGER DEFAULT 1,
                            item_level INTEGER DEFAULT 0,
                            puntos_dkp_actuales INTEGER DEFAULT 0,
                            CONSTRAINT fk_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
@@ -100,7 +99,43 @@ CREATE TABLE item (
                       id_item SERIAL PRIMARY KEY,
                       nombre_item VARCHAR(100) NOT NULL,
                       rareza VARCHAR(30) DEFAULT 'Comun',
-                      costo_dkp INTEGER NOT NULL
+                      tipo VARCHAR(20) DEFAULT 'ACCESORIO',
+                      nivel INTEGER DEFAULT 1,
+                      costo_dkp INTEGER NOT NULL,
+                      CONSTRAINT chk_item_tipo
+                          CHECK (tipo IN ('ARMADURA', 'ARMA', 'ACCESORIO'))
+);
+
+-- ============================================================
+-- Tabla de Inventario
+-- ============================================================
+CREATE TABLE inventario (
+                             id_inventario SERIAL PRIMARY KEY,
+                             id_personaje INTEGER NOT NULL UNIQUE,
+                             armadura_equipado INTEGER,
+                             arma_equipado INTEGER,
+                             accesorio_equipado INTEGER,
+                             CONSTRAINT fk_inventario_personaje FOREIGN KEY (id_personaje)
+                                 REFERENCES personaje(id_personaje) ON DELETE CASCADE,
+                             CONSTRAINT fk_inventario_armadura FOREIGN KEY (armadura_equipado)
+                                 REFERENCES item(id_item) ON DELETE SET NULL,
+                             CONSTRAINT fk_inventario_arma FOREIGN KEY (arma_equipado)
+                                 REFERENCES item(id_item) ON DELETE SET NULL,
+                             CONSTRAINT fk_inventario_accesorio FOREIGN KEY (accesorio_equipado)
+                                 REFERENCES item(id_item) ON DELETE SET NULL
+);
+
+-- ============================================================
+-- Tabla de Items en Inventario
+-- ============================================================
+CREATE TABLE inventario_item (
+                                  id_inventario INTEGER NOT NULL,
+                                  id_item INTEGER NOT NULL,
+                                  PRIMARY KEY (id_inventario, id_item),
+                                  CONSTRAINT fk_inventario_item_inventario FOREIGN KEY (id_inventario)
+                                      REFERENCES inventario(id_inventario) ON DELETE CASCADE,
+                                  CONSTRAINT fk_inventario_item_item FOREIGN KEY (id_item)
+                                      REFERENCES item(id_item) ON DELETE CASCADE
 );
 
 -- ============================================================

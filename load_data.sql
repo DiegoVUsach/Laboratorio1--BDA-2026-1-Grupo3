@@ -13,37 +13,55 @@ INSERT INTO clanes (nombre_clan) VALUES ('Los Heraldos de Azeroth');
 INSERT INTO clanes (nombre_clan) VALUES ('Guardianes del Alba');
 
 -- Personajes del admin (id_usuario=1) - es Guild Master del clan 1
-INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, nivel, item_level, puntos_dkp_actuales)
-VALUES (1, 1, 'ArthasPvP', 'Paladin', 'Guild Master', 60, 250, 1000);
+INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, item_level, puntos_dkp_actuales)
+VALUES (1, 1, 'ArthasPvP', 'Paladin', 'Guild Master', 250, 1000);
 
 -- Personajes del jugador1 (id_usuario=2) - un Raider y un Member
-INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, nivel, item_level, puntos_dkp_actuales)
-VALUES (2, 1, 'JainaFrost', 'Mago', 'Raider', 60, 245, 800);
+INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, item_level, puntos_dkp_actuales)
+VALUES (2, 1, 'JainaFrost', 'Mago', 'Raider', 245, 800);
 
-INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, nivel, item_level, puntos_dkp_actuales)
-VALUES (2, 1, 'ThrallShaman', 'Chaman', 'Member', 55, 200, 400);
+INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, item_level, puntos_dkp_actuales)
+VALUES (2, 1, 'ThrallShaman', 'Chaman', 'Member', 200, 400);
 
 -- Personajes del jugador2 (id_usuario=3) - Raider del clan 1
-INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, nivel, item_level, puntos_dkp_actuales)
-VALUES (3, 1, 'SylvanasArcher', 'Cazador', 'Raider', 58, 240, 750);
+INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, item_level, puntos_dkp_actuales)
+VALUES (3, 1, 'SylvanasArcher', 'Cazador', 'Raider', 240, 750);
 
 -- Personajes del jugador3 (id_usuario=4) - Guild Master del clan 2
-INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, nivel, item_level, puntos_dkp_actuales)
-VALUES (4, 2, 'VoljinShadow', 'Brujo', 'Guild Master', 60, 230, 600);
+INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, item_level, puntos_dkp_actuales)
+VALUES (4, 2, 'VoljinShadow', 'Brujo', 'Guild Master', 230, 600);
 
-INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, nivel, item_level, puntos_dkp_actuales)
-VALUES (4, 2, 'GarroshWarrior', 'Guerrero', 'Raider', 57, 220, 500);
+INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, clase, rol_clan, item_level, puntos_dkp_actuales)
+VALUES (4, 2, 'GarroshWarrior', 'Guerrero', 'Raider', 220, 500);
 
 -- Asignar lideres a los clanes (cierra la referencia circular)
 UPDATE clanes SET id_lider = 1 WHERE id_clan = 1;
 UPDATE clanes SET id_lider = 5 WHERE id_clan = 2;
 
 -- Items de botin
-INSERT INTO item (nombre_item, rareza, costo_dkp) VALUES ('Agonia de Escarcha', 'Legendario', 500);
-INSERT INTO item (nombre_item, rareza, costo_dkp) VALUES ('Escudo de Lordaeron', 'Epico', 200);
-INSERT INTO item (nombre_item, rareza, costo_dkp) VALUES ('Capa de las Sombras', 'Raro', 100);
-INSERT INTO item (nombre_item, rareza, costo_dkp) VALUES ('Anillo del Destino', 'Epico', 300);
-INSERT INTO item (nombre_item, rareza, costo_dkp) VALUES ('Botas de Viento', 'Comun', 50);
+INSERT INTO item (nombre_item, rareza, tipo, nivel, costo_dkp) VALUES ('Agonia de Escarcha', 'Legendario', 'ARMA', 60, 500);
+INSERT INTO item (nombre_item, rareza, tipo, nivel, costo_dkp) VALUES ('Escudo de Lordaeron', 'Epico', 'ARMADURA', 50, 200);
+INSERT INTO item (nombre_item, rareza, tipo, nivel, costo_dkp) VALUES ('Capa de las Sombras', 'Raro', 'ACCESORIO', 45, 100);
+INSERT INTO item (nombre_item, rareza, tipo, nivel, costo_dkp) VALUES ('Anillo del Destino', 'Epico', 'ACCESORIO', 55, 300);
+INSERT INTO item (nombre_item, rareza, tipo, nivel, costo_dkp) VALUES ('Botas de Viento', 'Comun', 'ARMADURA', 35, 50);
+
+-- Inventario de prueba
+INSERT INTO inventario (id_personaje, armadura_equipado, arma_equipado, accesorio_equipado)
+VALUES (1, 2, 1, 4);
+
+INSERT INTO inventario (id_personaje, armadura_equipado, arma_equipado, accesorio_equipado)
+VALUES (2, 5, 1, 3);
+
+INSERT INTO inventario (id_personaje, armadura_equipado, arma_equipado, accesorio_equipado)
+VALUES (3, NULL, 1, 4);
+
+-- Items dentro del inventario
+INSERT INTO inventario_item (id_inventario, id_item) VALUES (1, 1);
+INSERT INTO inventario_item (id_inventario, id_item) VALUES (1, 2);
+INSERT INTO inventario_item (id_inventario, id_item) VALUES (1, 4);
+INSERT INTO inventario_item (id_inventario, id_item) VALUES (2, 1);
+INSERT INTO inventario_item (id_inventario, id_item) VALUES (2, 3);
+INSERT INTO inventario_item (id_inventario, id_item) VALUES (3, 4);
 
 -- Raids programadas
 -- Raids programadas

@@ -10,7 +10,6 @@ public class Personaje {
     private String nombrePersonaje;
     private String clase;
     private String rolClan;
-    private Integer nivel;
     private Integer itemLevel;
     private Integer puntosDkpActuales;
 }

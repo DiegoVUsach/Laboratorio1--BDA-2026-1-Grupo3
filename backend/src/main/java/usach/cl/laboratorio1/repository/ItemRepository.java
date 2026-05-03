@@ -21,6 +21,11 @@ public class ItemRepository {
         item.setIdItem(rs.getInt("id_item"));
         item.setNombreItem(rs.getString("nombre_item"));
         item.setRareza(rs.getString("rareza"));
+        String tipo = rs.getString("tipo");
+        if (tipo != null) {
+            item.setTipo(Item.TipoItem.valueOf(tipo));
+        }
+        item.setNivel(rs.getInt("nivel"));
         item.setCostoDkp(rs.getInt("costo_dkp"));
         return item;
     };
@@ -42,18 +47,21 @@ public class ItemRepository {
 
     public int save(Item item) {
         return jdbcTemplate.update(
-                "INSERT INTO item (nombre_item, rareza, costo_dkp) VALUES (?, ?, ?)",
+                "INSERT INTO item (nombre_item, rareza, tipo, nivel, costo_dkp) VALUES (?, ?, ?, ?, ?)",
                 item.getNombreItem(),
                 item.getRareza() != null ? item.getRareza() : "Comun",
+            item.getTipo() != null ? item.getTipo().name() : Item.TipoItem.ACCESORIO.name(),
+                item.getNivel() != null ? item.getNivel() : 1,
                 item.getCostoDkp());
     }
 
     public int update(Item item) {
         return jdbcTemplate.update(
-                "UPDATE item SET nombre_item = ?, rareza = ?, costo_dkp = ? " +
+            "UPDATE item SET nombre_item = ?, rareza = ?, tipo = ?, nivel = ?, costo_dkp = ? " +
                         "WHERE id_item = ?",
                 item.getNombreItem(), item.getRareza(),
-                item.getCostoDkp(), item.getIdItem());
+            item.getTipo() != null ? item.getTipo().name() : null,
+            item.getNivel(), item.getCostoDkp(), item.getIdItem());
     }
 
     public int deleteById(Integer id) {

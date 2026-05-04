@@ -1,13 +1,16 @@
 package usach.cl.laboratorio1.repository;
 
-import usach.cl.laboratorio1.dto.InventarioDTO;
-import usach.cl.laboratorio1.tablas.Inventario;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import usach.cl.laboratorio1.dto.InventarioDTO;
+import usach.cl.laboratorio1.dto.InventarioItemDTO;
+import usach.cl.laboratorio1.tablas.Inventario;
+import usach.cl.laboratorio1.tablas.Item;
 
 @Repository
 public class InventarioRepository {
@@ -15,37 +18,91 @@ public class InventarioRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private final RowMapper<Inventario> rowMapper = (rs, rowNum) -> {
-        Inventario e = new Inventario();
-        e.setIdInventario(rs.getInt("id_inventario"));
-        e.setIdPersonaje(rs.getInt("id_personaje"));
-        e.setArmaduraEquipado((Integer) rs.getObject("armadura_equipado"));
-        e.setArmaEquipado((Integer) rs.getObject("arma_equipado"));
-        e.setAccesorioEquipado((Integer) rs.getObject("accesorio_equipado"));
-        return e;
-    };
+// --- Métodos Auxiliares de Conversión Segura ---
+private Long toLong(Object obj) {
+    return (obj instanceof Number n) ? n.longValue() : null;
+}
 
-    private final RowMapper<InventarioDTO> dtoMapper = (rs, rowNum) -> {
-        InventarioDTO e = new InventarioDTO();
-        e.setIdInventario(rs.getInt("id_inventario"));
-        e.setIdPersonaje(rs.getInt("id_personaje"));
-        e.setArmaduraEquipado((Integer) rs.getObject("armadura_equipado"));
-        e.setArmaEquipado((Integer) rs.getObject("arma_equipado"));
-        e.setAccesorioEquipado((Integer) rs.getObject("accesorio_equipado"));
-        e.setNombreArmadura(rs.getString("nombre_armadura"));
-        e.setNombreArma(rs.getString("nombre_arma"));
-        e.setNombreAccesorio(rs.getString("nombre_accesorio"));
-        return e;
-    };
+private Integer toInt(Object obj) {
+    return (obj instanceof Number n) ? n.intValue() : null;
+}
+
+// Mapper para la entidad interna (Usa Integer)
+private final RowMapper<Inventario> rowMapper = (rs, rowNum) -> {
+    Inventario e = new Inventario();
+    // Usamos toInt para convertir cualquier tipo numérico de la DB a Integer de forma segura
+    e.setIdInventario(toInt(rs.getObject("id_inventario")));
+    e.setIdPersonaje(toInt(rs.getObject("id_personaje")));
+    
+    e.setArmaduraEquipado(toInt(rs.getObject("armadura_equipado")));
+    e.setArmaEquipado(toInt(rs.getObject("arma_equipado")));
+    e.setAccesorioEquipado(toInt(rs.getObject("accesorio_equipado")));
+    return e;
+};
+
+// Mapper para el DTO (Usa Long)
+private final RowMapper<InventarioDTO> dtoMapper = (rs, rowNum) -> {
+    InventarioDTO e = new InventarioDTO();
+    
+    // Usamos toLong para garantizar que se asigne un Long sin errores de casteo
+    e.setIdInventario(toLong(rs.getObject("id_inventario")));
+    e.setIdPersonaje(toLong(rs.getObject("id_personaje")));
+    
+    e.setArmaduraEquipado(toLong(rs.getObject("armadura_equipado")));
+    e.setArmaEquipado(toLong(rs.getObject("arma_equipado")));
+    e.setAccesorioEquipado(toLong(rs.getObject("accesorio_equipado")));
+
+    e.setNombreArmadura(rs.getString("nombreArmadura"));
+    e.setNivelArmadura(toInt(rs.getObject("nivelArmadura")));
+    
+    e.setNombreArma(rs.getString("nombreArma"));
+    e.setNivelArma(toInt(rs.getObject("nivelArma")));
+    
+    e.setNombreAccesorio(rs.getString("nombreAccesorio"));
+    e.setNivelAccesorio(toInt(rs.getObject("nivelAccesorio")));
+    
+    return e;
+};
+
+private final RowMapper<InventarioItemDTO> itemDtoMapper = (rs, rowNum) -> {
+    InventarioItemDTO dto = new InventarioItemDTO();
+    dto.setIdInventario(rs.getInt("id_inventario"));
+    dto.setIdItem(rs.getInt("id_item"));
+    dto.setNombreItem(rs.getString("nombre_item"));
+    dto.setRareza(rs.getString("rareza"));
+    // Mapeo del Enum TipoItem (Asegúrate que coincida con tu entidad Item)
+    dto.setTipo(Item.TipoItem.valueOf(rs.getString("tipo"))); 
+    dto.setNivel(rs.getInt("nivel"));
+    dto.setCostoDkp(rs.getInt("costo_dkp"));
+    return dto;
+};
+
+
+public List<InventarioItemDTO> findItemsByPersonaje(Integer idPersonaje) {
+    String sql = "SELECT ii.id_inventario, i.* FROM inventario_item ii " +
+                 "JOIN item i ON ii.id_item = i.id_item " +
+                 "JOIN inventario inv ON ii.id_inventario = inv.id_inventario " +
+                 "WHERE inv.id_personaje = ?";
+    return jdbcTemplate.query(sql, itemDtoMapper, idPersonaje);
+}
+
+// Método para agregar un ítem nuevo a la bolsa (cuando el personaje gana botín)
+public int addItemToInventario(Integer idInventario, Integer idItem) {
+    String sql = "INSERT INTO inventario_item (id_inventario, id_item) VALUES (?, ?)";
+    return jdbcTemplate.update(sql, idInventario, idItem);
+}
+
+
 
     private static final String SELECT_INVENTARIO_DETALLE =
-            "SELECT e.*, ia.nombre_item AS nombre_armadura, " +
-            "im.nombre_item AS nombre_arma, " +
-            "ic.nombre_item AS nombre_accesorio " +
-            "FROM inventario e " +
-            "LEFT JOIN item ia ON e.armadura_equipado = ia.id_item " +
-            "LEFT JOIN item im ON e.arma_equipado = im.id_item " +
-            "LEFT JOIN item ic ON e.accesorio_equipado = ic.id_item";
+    "SELECT e.*, " +
+    "ia.nombre_item AS nombreArmadura, ia.nivel AS nivelArmadura, " + // Alias corregido
+    "im.nombre_item AS nombreArma, im.nivel AS nivelArma, " +
+    "ic.nombre_item AS nombreAccesorio, ic.nivel AS nivelAccesorio " +
+    "FROM inventario e " +
+    "LEFT JOIN item ia ON e.armadura_equipado = ia.id_item " +
+    "LEFT JOIN item im ON e.arma_equipado = im.id_item " +
+    "LEFT JOIN item ic ON e.accesorio_equipado = ic.id_item";
 
     public List<Inventario> findAll(int page, int size) {
         String sql = "SELECT * FROM inventario ORDER BY id_inventario LIMIT ? OFFSET ?";

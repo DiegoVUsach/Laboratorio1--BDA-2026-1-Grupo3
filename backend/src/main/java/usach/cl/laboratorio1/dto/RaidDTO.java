@@ -1,5 +1,7 @@
 package usach.cl.laboratorio1.dto;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import usach.cl.laboratorio1.tablas.Raid;
@@ -13,8 +15,9 @@ import usach.cl.laboratorio1.tablas.Raid;
 @Data
 @AllArgsConstructor
 public class RaidDTO {
-    private Raid raid;              // La raid con todos sus datos
-    private int cuposTanqueLibres;  // Cupos de tanque disponibles
-    private int cuposHealerLibres;  // Cupos de healer disponibles
-    private int cuposDpsLibres;     // Cupos de DPS disponibles
+    private Raid raid;
+    private int cuposTanqueLibres;
+    private int cuposHealerLibres;
+    private int cuposDpsLibres;
+    private List<Integer> idsParticipantes; // Añade esta lista
 }

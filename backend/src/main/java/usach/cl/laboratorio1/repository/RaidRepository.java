@@ -1,12 +1,17 @@
 package usach.cl.laboratorio1.repository;
 
-import usach.cl.laboratorio1.tablas.Raid;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import usach.cl.laboratorio1.tablas.Raid;
 
 @Repository
 public class RaidRepository {
@@ -42,13 +47,24 @@ public class RaidRepository {
         return list.isEmpty() ? null : list.get(0);
     }
 
-    public int save(Raid r) {
-        String sql = "INSERT INTO raids (nombre_raid, fecha_raid, item_level_minimo, " +
-                "tanques, healers, dps) VALUES (?, ?, ?, ?, ?, ?)";
-        return jdbcTemplate.update(sql,
-                r.getNombreRaid(), r.getFechaRaid(), r.getItemLevelMinimo(),
-                r.getTanques(), r.getHealers(), r.getDps());
-    }
+public Integer save(Raid r) {
+    String sql = "INSERT INTO raids (nombre_raid, fecha_raid, item_level_minimo, tanques, healers, dps) VALUES (?, ?, ?, ?, ?, ?)";
+    KeyHolder keyHolder = new GeneratedKeyHolder();
+
+    jdbcTemplate.update(connection -> {
+        PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        ps.setString(1, r.getNombreRaid());
+        ps.setTimestamp(2, java.sql.Timestamp.valueOf(r.getFechaRaid()));
+        ps.setInt(3, r.getItemLevelMinimo());
+        ps.setInt(4, r.getTanques());
+        ps.setInt(5, r.getHealers());
+        ps.setInt(6, r.getDps());
+        return ps;
+    }, keyHolder);
+
+    // Retorna el ID generado (suponiendo que es la columna 1 o llamada id_raid)
+    return (Integer) keyHolder.getKeys().get("id_raid");
+}
 
     public int update(Raid r) {
         String sql = "UPDATE raids SET nombre_raid = ?, fecha_raid = ?, " +
@@ -71,4 +87,8 @@ public class RaidRepository {
     public void invitarRaiders(Integer idRaid, Integer idClan) {
         jdbcTemplate.update("CALL sp_invitacion_masiva_raiders(?, ?)", idRaid, idClan);
     }
+    public int eliminarInscripcion(Integer idRaid, Integer idPersonaje) {
+    String sql = "DELETE FROM inscripciones_raid WHERE id_raid = ? AND id_personaje = ?";
+    return jdbcTemplate.update(sql, idRaid, idPersonaje);
+}
 }

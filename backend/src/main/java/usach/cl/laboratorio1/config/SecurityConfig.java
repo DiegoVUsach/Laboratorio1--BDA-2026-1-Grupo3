@@ -56,7 +56,13 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Permite el origen de tu frontend (ajusta el puerto si usas otro como 5173 o 4200)
-        configuration.setAllowedOrigins(List.of("http://localhost", "http://127.0.0.1"));
+        // Agregamos los puertos comunes de desarrollo (5173 para Vite, 8080 para otros)
+    configuration.setAllowedOrigins(List.of(
+    "http://localhost:5173", 
+    "http://127.0.0.1:5173", 
+    "http://localhost:8080",
+    "http://localhost"
+    ));
         
         // Permite los métodos HTTP estándar
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

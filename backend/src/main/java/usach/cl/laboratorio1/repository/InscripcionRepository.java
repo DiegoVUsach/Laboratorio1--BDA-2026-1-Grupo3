@@ -1,9 +1,13 @@
 package usach.cl.laboratorio1.repository;
 
-import usach.cl.laboratorio1.tablas.InscripcionRaid;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
+import usach.cl.laboratorio1.tablas.InscripcionRaid;
 
 @Repository
 public class InscripcionRepository {
@@ -16,12 +20,14 @@ public class InscripcionRepository {
     // Si el personaje no tiene suficiente item_level, PostgreSQL
     // lanza una excepcion y el INSERT se cancela.
     // Esa excepcion sube hasta el controller como un error 400.
-    public int inscribir(InscripcionRaid ins) {
+        public int inscribir(InscripcionRaid ins) {
         String sql = "INSERT INTO inscripciones_raid (id_raid, id_personaje, rol_en_raid) " +
-                "VALUES (?, ?, ?)";
-        return jdbcTemplate.update(sql,
+                        "VALUES (?, ?, ?) " +
+                        "ON CONFLICT (id_raid, id_personaje) " +
+                        "DO UPDATE SET rol_en_raid = EXCLUDED.rol_en_raid"; 
+        return jdbcTemplate.update(sql, 
                 ins.getIdRaid(), ins.getIdPersonaje(), ins.getRolEnRaid());
-    }
+        }
 
     // Cuenta cuantos inscritos hay en una raid para un rol especifico.
     // Se usa para calcular los cupos libres en el calendario (Req 9).
@@ -40,5 +46,19 @@ public class InscripcionRepository {
         return jdbcTemplate.update(
                 "UPDATE inscripciones_raid SET confirmado = true " +
                         "WHERE id_inscripcion = ?", idInscripcion);
+    }
+    public List<Integer> obtenerIdsParticipantes(Integer idRaid) {
+    String sql = "SELECT id_personaje FROM inscripciones_raid WHERE id_raid = ?";
+    return jdbcTemplate.queryForList(sql, Integer.class, idRaid);
+}
+
+    // Lista los inscritos de una raid con nombre y estado de confirmacion.
+    // Se usa en el frontend para que el GM confirme asistencias.
+    public List<Map<String, Object>> findByRaid(Integer idRaid) {
+        String sql = "SELECT ir.id_inscripcion, ir.id_personaje, p.nombre_personaje, " +
+                     "ir.rol_en_raid, ir.confirmado " +
+                     "FROM inscripciones_raid ir JOIN personaje p ON ir.id_personaje = p.id_personaje " +
+                     "WHERE ir.id_raid = ? ORDER BY ir.rol_en_raid";
+        return jdbcTemplate.queryForList(sql, idRaid);
     }
 }

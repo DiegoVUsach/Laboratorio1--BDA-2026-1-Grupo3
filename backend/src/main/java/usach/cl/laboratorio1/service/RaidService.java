@@ -23,19 +23,26 @@ public class RaidService {
     // Para cada raid, calcula cuantos cupos quedan por rol:
     // cupos libres = cupos totales de la raid - inscritos en ese rol.
     // Math.max(x, 0) evita numeros negativos si se sobreinscribieron.
-    public List<RaidDTO> getCalendarioSemanal() {
-        List<Raid> raids = raidRepository.findAll();
-        return raids.stream().map(r -> {
-            int tanquesLibres = r.getTanques()
-                    - inscripcionRepository.contarInscritosPorRol(r.getIdRaid(), "TANQUE");
-            int healersLibres = r.getHealers()
-                    - inscripcionRepository.contarInscritosPorRol(r.getIdRaid(), "HEALER");
-            int dpsLibres = r.getDps()
-                    - inscripcionRepository.contarInscritosPorRol(r.getIdRaid(), "DPS");
-            return new RaidDTO(r,
-                    Math.max(tanquesLibres, 0),
-                    Math.max(healersLibres, 0),
-                    Math.max(dpsLibres, 0));
-        }).collect(Collectors.toList());
-    }
+        public List<RaidDTO> getCalendarioSemanal() {
+    List<Raid> raids = raidRepository.findAll();
+    return raids.stream().map(r -> {
+        int tanquesLibres = r.getTanques() 
+                - inscripcionRepository.contarInscritosPorRol(r.getIdRaid(), "TANQUE");
+        int healersLibres = r.getHealers() 
+                - inscripcionRepository.contarInscritosPorRol(r.getIdRaid(), "HEALER");
+        int dpsLibres = r.getDps() 
+                - inscripcionRepository.contarInscritosPorRol(r.getIdRaid(), "DPS");
+
+        // NUEVO: Obtener la lista de IDs inscritos
+        List<Integer> participantes = inscripcionRepository.obtenerIdsParticipantes(r.getIdRaid());
+
+        return new RaidDTO(
+                r,
+                Math.max(tanquesLibres, 0),
+                Math.max(healersLibres, 0),
+                Math.max(dpsLibres, 0),
+                participantes // Se pasa al constructor del DTO
+        );
+    }).collect(Collectors.toList());
+        }
 }

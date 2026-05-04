@@ -1,5 +1,21 @@
 package usach.cl.laboratorio1.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import usach.cl.laboratorio1.dto.RaidDTO;
 import usach.cl.laboratorio1.repository.PersonajeRepository;
 import usach.cl.laboratorio1.repository.RaidRepository;
@@ -9,13 +25,6 @@ import usach.cl.laboratorio1.service.RaidService;
 import usach.cl.laboratorio1.tablas.InscripcionRaid;
 import usach.cl.laboratorio1.tablas.Personaje;
 import usach.cl.laboratorio1.tablas.Raid;
-import usach.cl.laboratorio1.tablas.Usuario;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/raids")
@@ -54,16 +63,24 @@ public class RaidController {
     // FIX BUG 2: Solo un Guild Master puede crear raids (Req 2).
     // Se verifica que el usuario tenga al menos un personaje con rol GM.
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody Raid raid, Authentication auth) {
-        try {
-            if (!esGuildMaster(auth.getName())) {
-                return ResponseEntity.status(403).body("Solo el Guild Master puede crear raids.");
-            }
-            raidRepository.save(raid);
-            return ResponseEntity.ok("Raid creada exitosamente");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        }
+public ResponseEntity<?> create(@RequestBody Raid raid, Authentication auth) {
+    try {
+        // 1. Buscamos al personaje del usuario que es GM
+        Personaje gm = personajeRepository.findByUsuario(auth.getName()).stream()
+                .filter(p -> "Guild Master".equals(p.getRolClan()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No tienes un personaje GM"));
+
+        // 2. Guardamos la raid (obtenemos el ID generado)
+        Integer idRaidGenerado = raidRepository.save(raid); 
+
+        // 3. ¡MAGIA! Llamamos al SP que ya creaste en SQL
+        raidRepository.invitarRaiders(idRaidGenerado, gm.getIdClan());
+
+        return ResponseEntity.ok("Raid creada e invitaciones automáticas enviadas a los Raiders.");
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
     }
 
     // FIX BUG 10: Solo GM puede actualizar raids
@@ -136,4 +153,26 @@ public class RaidController {
         public Integer idRaid;
         public Integer idClan;
     }
+    @DeleteMapping("/desinscribirse")
+    public ResponseEntity<?> desinscribirse(@RequestParam Integer idRaid, 
+                                        @RequestParam Integer idPersonaje, 
+                                        Authentication auth) {
+    try {
+        // Validación de seguridad: El usuario autenticado debe ser dueño del personaje
+        List<Personaje> misPersonajes = personajeRepository.findByUsuario(auth.getName());
+        boolean esMio = misPersonajes.stream().anyMatch(p -> p.getIdPersonaje().equals(idPersonaje));
+        
+        if (!esMio) {
+            return ResponseEntity.status(403).body("No puedes desinscribir a un personaje que no te pertenece.");
+        }
+
+        // Aquí debes llamar a un método en tu repository que haga: 
+        // DELETE FROM inscripciones WHERE id_raid = ? AND id_personaje = ?
+        raidRepository.eliminarInscripcion(idRaid, idPersonaje);
+        
+        return ResponseEntity.ok("Inscripción anulada.");
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
 }
+};

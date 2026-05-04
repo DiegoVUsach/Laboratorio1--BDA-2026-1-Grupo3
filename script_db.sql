@@ -371,3 +371,65 @@ CREATE TRIGGER trg_recalcular_item_level
     AFTER INSERT OR UPDATE ON inventario
                         FOR EACH ROW
                         EXECUTE FUNCTION funcion_recalcular_item_level();
+
+
+-- Nuevo Trigger incoherencia faccion clan
+CREATE OR REPLACE FUNCTION funcion_validar_faccion_clan()
+RETURNS TRIGGER AS $$
+DECLARE
+    faccion_clan VARCHAR(50);
+BEGIN
+    -- Buscamos la facción de cualquier miembro que ya esté en ese clan
+    SELECT faccion INTO faccion_clan 
+    FROM personaje 
+    WHERE id_clan = NEW.id_clan 
+    LIMIT 1;
+
+    -- Si el clan no está vacío y la facción del nuevo es distinta, lanzamos error
+    IF faccion_clan IS NOT NULL AND faccion_clan <> NEW.faccion THEN
+        RAISE EXCEPTION 'Incoherencia de facción: El clan ya pertenece a % y el personaje es %', 
+        faccion_clan, NEW.faccion;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validar_faccion_clan
+    BEFORE INSERT OR UPDATE OF id_clan ON personaje
+    FOR EACH ROW
+    EXECUTE FUNCTION funcion_validar_faccion_clan();
+
+-- ============================================================
+
+-- Nuevo Trigger Item level no relacionado a item equipado
+CREATE OR REPLACE FUNCTION funcion_bloquear_item_level_manual()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Si alguien intenta cambiar el item_level directamente en la tabla personaje...
+    -- lo devolvemos a su valor original (OLD) a menos que el cambio venga del trigger del inventario.
+    -- O mejor aún: lanzamos un error indicando que debe equipar items.
+    
+    IF (TG_OP = 'UPDATE') AND (NEW.item_level <> OLD.item_level) THEN
+        -- Aquí podrías permitir el cambio solo si es una "llamada interna"
+        -- Pero lo más sano es que el item_level sea una columna de solo lectura para el usuario.
+        RAISE NOTICE 'El Item Level solo puede ser modificado equipando objetos en el inventario.';
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================================
+
+-- Nuevo Trigger para evitar que un personaje sin clan tenga rol de Raider o Guild Master
+CREATE OR REPLACE FUNCTION funcion_validar_rol_sin_clan()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (NEW.id_clan IS NULL) AND (NEW.rol_clan IN ('
+Raider', 'Guild Master')) THEN
+        RAISE EXCEPTION 'Un personaje sin clan no puede tener rol de Raider o Guild Master.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;

@@ -50,6 +50,7 @@ export interface RaidDTO {
   cuposDpsLibres: number;
 }
 
+
 export interface InventarioDTO {
   idInventario: number;
   idPersonaje: number;
@@ -57,8 +58,11 @@ export interface InventarioDTO {
   armaEquipado: number | null;
   accesorioEquipado: number | null;
   nombreArmadura: string | null;
+  nivelArmadura: number | null;   // <--- Añadir esto
   nombreArma: string | null;
+  nivelArma: number | null;       // <--- Añadir esto
   nombreAccesorio: string | null;
+  nivelAccesorio: number | null;  // <--- Añadir esto
 }
 
 export interface InventarioItemDTO {
@@ -162,12 +166,18 @@ export const clanService = {
     // No hay endpoint directo, usamos personajes y filtramos
     return apiRequest<Personaje[]>(`/personajes?page=0&size=100`);
   },
+  transferLeadership(idClan: number, idCurrentLeader: number, idNewLeader: number) {
+    return apiRequest<string>(`/clanes/${idClan}/transfer-leadership`, 'PUT', {
+      idCurrentLeader, idNewLeader
+    });
+  },
 };
 
 export const raidService = {
   getCalendario() {
     return apiRequest<RaidDTO[]>('/raids/calendario');
   },
+
   inscribirse(idRaid: number, idPersonaje: number, rolEnRaid: string) {
     return apiRequest<string>('/raids/inscribirse', 'POST', {
       idRaid,
@@ -175,15 +185,30 @@ export const raidService = {
       rolEnRaid,
     });
   },
+
+  // === AÑADE ESTA FUNCIÓN AQUÍ ===
+  create(raidData: any) {
+    return apiRequest<string>('/raids', 'POST', raidData);
+  },
+  desinscribirse(idRaid: number, idPersonaje: number) {
+    return apiRequest<string>(`/raids/desinscribirse?idRaid=${idRaid}&idPersonaje=${idPersonaje}`, 'DELETE');
+  },
 };
 
+
 export const inventarioService = {
+
   getByPersonaje(idPersonaje: number) {
     return apiRequest<InventarioDTO>(`/inventarios/por-personaje/${idPersonaje}`);
   },
+
   getItemsByPersonaje(idPersonaje: number) {
     return apiRequest<InventarioItemDTO[]>(`/inventarios/por-personaje/${idPersonaje}/items`);
   },
+
+  update(idInventario: number, data: any) {
+    return apiRequest<string>(`/inventarios/id/${idInventario}`, 'PUT', data);
+  }
 };
 
 export const itemService = {
@@ -199,4 +224,17 @@ export const itemService = {
   repartirBotin(idPersonaje: number, idItem: number, idRaid: number) {
     return apiRequest<string>('/items/repartir', 'POST', { idPersonaje, idItem, idRaid });
   },
+  refrescarRanking() {
+    return apiRequest<string>('/items/ranking/refrescar', 'POST');
+  },
 };
+
+export const inscripcionService = {
+  getByRaid(idRaid: number) {
+    return apiRequest<any[]>(`/inscripciones/por-raid/${idRaid}`);
+  },
+  confirmarAsistencia(idInscripcion: number, idEjecutor: number) {
+    return apiRequest<string>(`/inscripciones/${idInscripcion}/confirmar`, 'PUT', { idEjecutor });
+  },
+};
+

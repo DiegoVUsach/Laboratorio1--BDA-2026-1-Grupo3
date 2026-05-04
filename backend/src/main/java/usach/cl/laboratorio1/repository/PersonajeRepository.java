@@ -21,6 +21,7 @@ public class PersonajeRepository {
         p.setIdClan((Integer) rs.getObject("id_clan"));
         p.setNombrePersonaje(rs.getString("nombre_personaje"));
         p.setClase(rs.getString("clase"));
+        p.setFaccion(Personaje.Faccion.fromLabel(rs.getString("faccion")));
         p.setRolClan(rs.getString("rol_clan"));
         p.setItemLevel(rs.getInt("item_level"));
         p.setPuntosDkpActuales(rs.getInt("puntos_dkp_actuales"));
@@ -58,11 +59,11 @@ public class PersonajeRepository {
 
     public int save(Personaje p) {
         String sql = "INSERT INTO personaje (id_usuario, id_clan, nombre_personaje, " +
-            "clase, rol_clan, item_level, puntos_dkp_actuales) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            "clase, faccion, rol_clan, item_level, puntos_dkp_actuales) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         return jdbcTemplate.update(sql,
                 p.getIdUsuario(), p.getIdClan(), p.getNombrePersonaje(),
-                p.getClase(),
+                p.getClase(), p.getFaccion().getLabel(),
                 p.getRolClan() != null ? p.getRolClan() : "Member",
                 p.getItemLevel() != null ? p.getItemLevel() : 0,
                 p.getPuntosDkpActuales() != null ? p.getPuntosDkpActuales() : 0);
@@ -70,9 +71,9 @@ public class PersonajeRepository {
 
     public int update(Personaje p) {
         String sql = "UPDATE personaje SET nombre_personaje = ?, clase = ?, " +
-            "item_level = ? WHERE id_personaje = ?";
+            "faccion = ?, item_level = ? WHERE id_personaje = ?";
         return jdbcTemplate.update(sql,
-            p.getNombrePersonaje(), p.getClase(),
+            p.getNombrePersonaje(), p.getClase(), p.getFaccion().getLabel(),
             p.getItemLevel(), p.getIdPersonaje());
     }
 

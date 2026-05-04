@@ -63,6 +63,9 @@ public class PersonajeController {
             if (owner == null) {
                 return ResponseEntity.status(401).body("Usuario no encontrado.");
             }
+            if (personaje.getFaccion() == null) {
+                return ResponseEntity.badRequest().body("Faccion invalida.");
+            }
             // Forzar que el personaje pertenezca al usuario del token
             personaje.setIdUsuario(owner.getIdUsuario());
             personajeRepository.save(personaje);
@@ -82,6 +85,9 @@ public class PersonajeController {
         try {
             if (!personajeRepository.perteneceAUsuario(id, auth.getName())) {
                 return ResponseEntity.status(403).body("No tienes permiso sobre este personaje.");
+            }
+            if (personaje.getFaccion() == null) {
+                return ResponseEntity.badRequest().body("Faccion invalida.");
             }
             personaje.setIdPersonaje(id);
             personajeRepository.update(personaje);
@@ -127,4 +133,5 @@ public class PersonajeController {
         public Integer idObjetivo;
         public String nuevoRol;
     }
+
 }

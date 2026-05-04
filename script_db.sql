@@ -25,9 +25,16 @@ CREATE TABLE personaje (
                            id_clan INTEGER,
                            nombre_personaje VARCHAR(100) NOT NULL UNIQUE,
                            clase VARCHAR(50) NOT NULL,
+                           faccion VARCHAR(50) NOT NULL,
                            rol_clan VARCHAR(50) DEFAULT 'Member',
                            item_level INTEGER DEFAULT 0,
                            puntos_dkp_actuales INTEGER DEFAULT 0,
+                           CONSTRAINT chk_personaje_faccion
+                               CHECK (faccion IN (
+                                   'Los Primordiales de la Luz',
+                                   'Los Hijos del Gris',
+                                   'Los Marcados por el Abismo'
+                               )),
                            CONSTRAINT fk_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
                            CONSTRAINT fk_clan FOREIGN KEY (id_clan) REFERENCES clanes(id_clan) ON DELETE SET NULL
 );

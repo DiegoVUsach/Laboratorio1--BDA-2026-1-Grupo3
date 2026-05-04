@@ -11,14 +11,16 @@ Base de Datos Avanzada, 1-2026. Universidad de Santiago de Chile.
 ## Cómo levantar el proyecto
 
 **Requisitos previos:**
-- Windows: Docker Desktop instalado.
-- Linux: Docker y Docker Compose instaladors
-Referir a: https://docs.docker.com/engine/install
+- Tener Docker y **Docker Compose V2** instalados.
+    - **Windows / Mac:** Basta con tener Docker Desktop instalado.
+    - **Linux:** Instalar Docker y el plugin de Compose (puedes revisar la guía oficial en https://docs.docker.com/engine/install).
+
+*(Nota: Si al ejecutar los pasos tu terminal no reconoce el comando `docker compose`, significa que tienes una versión antigua. En ese caso, simplemente usa el comando con guion: `docker-compose`).*
 
 **Pasos:**
 1. Clonar repositorio y dirigirse a la carpeta:
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/DiegoVUsach/Laboratorio1--BDA-2026-1-Grupo3
 cd Laboratorio1--BDA-2026-1-Grupo3
 ```
 Una vez en la raiz del proyecto, procedemos a:
